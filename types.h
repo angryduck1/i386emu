@@ -8,8 +8,8 @@ typedef enum {
 } cpu_mode_t;
 
 typedef struct {
-    bool x66_mode;
-    bool x67_mode;
+    bool x66_mode; // Operand size
+    bool x67_mode; // Address size
 } cpu_prefix;
 
 typedef struct {
@@ -17,6 +17,12 @@ typedef struct {
     __uint8_t reg;
     __uint8_t rm;
 } modrm_t;
+
+typedef struct {
+    __uint8_t scale;
+    __uint8_t index;
+    __uint8_t base;
+} sib_t;
 
 typedef struct {
     __uint32_t eax; // Accumulator
@@ -45,4 +51,5 @@ typedef struct {
     segmentRegisters seg;
     cpu_mode_t mode;
     cpu_prefix prefix;
+    __uint8_t* memory;
 } cpu_state_t;
