@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdio.h>
 #include "types.h"
 
@@ -90,6 +92,20 @@ __uint32_t* get_reg32(cpu_state_t *cpu, __uint8_t reg) {
     }
 
     return NULL;
+}
+
+__uint16_t* get_sreg(cpu_state_t *cpu, __uint8_t reg) {
+    switch(reg) {
+        case 0: return &cpu->seg.es;
+        case 1: return &cpu->seg.cs;
+        case 2: return &cpu->seg.ss;
+        case 3: return &cpu->seg.ds;
+        case 4: return &cpu->seg.fs;
+        case 5: return &cpu->seg.gs;
+        default:
+            fprintf(stderr, "Invalid Sreg index: %u", reg);
+            abort();
+    }
 }
 
 void set_reg8(__uint8_t* dst, __uint8_t* src) {

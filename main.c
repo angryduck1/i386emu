@@ -1,81 +1,16 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include "types.h"
-#include <tools.h>
+#include "functions.h"
+#include "tools.h"
 
 #define MEMORY_REALMODE_SIZE 1024 * 1024
 
-void execute_instructions(cpu_state_t *cpu, __uint8_t *memory) {
+void execute_instructions(cpu_state_t *cpu, __uint8_t *memory, Opcodes* opcodes) {
     while (true) {
         __uint8_t opcode = fetch_instruction_rmode(cpu, memory);
 
-        switch (opcode) {
-            case 0x88: { // MOV r/m8,r8
-                modrm_t m = decode_modrm(cpu);
-                __uint8_t *src = get_reg8(cpu, m.reg);
-
-                if (m.mod == 3) {
-                    __uint8_t *dst = get_reg8(cpu, m.rm);
-                    set_reg8(dst, src);
-                } else {
-                    __uint16_t out_segment;
-                    __uint32_t ea = effective_address(cpu, m, &out_segment);
-
-                    write_byte(cpu, out_segment, ea, *src);
-                }
-
-                break;
-            }
-            case 0x8A: { // MOV r8, r/m8
-                modrm_t m = decode_modrm(cpu);
-                __uint8_t *dst = get_reg8(cpu, m.reg);
-
-                if (m.mod == 3) {
-                    __uint8_t *src = get_reg8(cpu, m.rm);
-                    set_reg8(dst, src);
-                } else {
-                    __uint16_t out_segment;
-                    __uint32_t ea = effective_address(cpu, m, &out_segment);
-
-                    *dst = read_byte(cpu, out_segment, ea);
-                }
-
-                break;
-            }
-
-            case 0x89: { // MOV r/m16, r16 || MOV r/m32, r32
-                modrm_t m = decode_modrm(cpu);
-                bool op32 = (cpu->mode != REAL_MODE && !cpu->prefix.x66_mode) || (cpu->mode == REAL_MODE && cpu->prefix.x66_mode);
-
-                if (m.mod == 3) {
-                    if (op32) {
-                       __uint32_t *src = get_reg32(cpu, m.reg);
-                       __uint32_t *dst = get_reg32(cpu, m.rm);
-                       set_reg32(dst, src);
-                    } else {
-                       __uint16_t *src = get_reg16(cpu, m.reg);
-                       __uint16_t *dst = get_reg16(cpu, m.rm);
-                       set_reg16(dst, src);
-                    }
-                } else {
-                    __uint16_t out_segment;
-                    __uint32_t ea = effective_address(cpu, m, &out_segment);
-
-                    if (op32) {
-                        __uint32_t *src = get_reg32(cpu, m.reg);
-                        write_double_word(cpu, out_segment, ea, *src);
-                    } else {
-                        __uint16_t *src = get_reg16(cpu, m.reg);
-                        write_word(cpu, out_segment, ea, *src);
-                    }
-                }
-
-                break;
-            }
-            default:
-                break;
-        }
+        opcodes[opcode](cpu);
     }
 }
 
@@ -115,7 +50,10 @@ int main() {
 
     cpu.mode = REAL_MODE;
 
-    execute_instructions(&cpu, cpu.memory);
+    Opcodes opcodes[256] = {NULL};
+    init_opcodes(opcodes);
+
+    execute_instructions(&cpu, cpu.memory, opcodes);
 
     free(cpu.memory);
     cpu.memory = NULL;
