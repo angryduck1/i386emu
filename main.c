@@ -10,7 +10,7 @@ void execute_instructions(cpu_state_t *cpu, __uint8_t *memory, Opcodes* opcodes)
     while (true) {
         __uint8_t opcode = fetch_instruction_rmode(cpu, memory);
 
-        opcodes[opcode](cpu);
+        opcodes[opcode](cpu, opcode);
     }
 }
 
