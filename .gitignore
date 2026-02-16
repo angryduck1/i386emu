@@ -1,0 +1,10 @@
+*.exe
+
+.vscode/
+*.pdb
+
+test.bin.bak
+*.bak
+
+test.bin
+*.bin
